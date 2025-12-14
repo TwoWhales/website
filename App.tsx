@@ -4,7 +4,7 @@ import { YouTubeIcon, PatreonIcon, InstagramIcon, TikTokIcon } from './component
 import { SocialLink } from './types';
 
 // REPLACE THIS ID WITH YOUR ACTUAL LATEST VIDEO ID FROM YOUTUBE
-const LATEST_VIDEO_ID = "dQw4w9WgXcQ"; 
+const LATEST_VIDEO_ID = "TQOizpRSY2g"; 
 
 // Error Boundary to catch 3D crashes so the rest of the site stays up
 class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
