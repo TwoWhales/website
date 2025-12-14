@@ -3,6 +3,9 @@ import { Masthead3D } from './components/Masthead3D';
 import { YouTubeIcon, PatreonIcon, InstagramIcon, TikTokIcon } from './components/Icons';
 import { SocialLink } from './types';
 
+// REPLACE THIS ID WITH YOUR ACTUAL LATEST VIDEO ID FROM YOUTUBE
+const LATEST_VIDEO_ID = "dQw4w9WgXcQ"; 
+
 // Error Boundary to catch 3D crashes so the rest of the site stays up
 class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
@@ -70,9 +73,28 @@ const App: React.FC = () => {
       <main className="flex-grow flex flex-col items-center px-4 pb-12 pt-0 max-w-2xl mx-auto w-full">
         
         {/* Intro Text */}
-        <div className="mb-12 text-center max-w-lg">
+        <div className="mb-8 text-center max-w-lg">
           <p className="text-zinc-400 text-sm md:text-base leading-relaxed uppercase tracking-widest">
             Esoteric knowledge from my twisted mind.
+          </p>
+        </div>
+
+        {/* Latest Video Embed */}
+        <div className="mb-16 w-full max-w-lg flex flex-col items-center">
+          <div className="w-full aspect-video border-2 border-zinc-800 bg-black p-1 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+            <iframe 
+              width="100%" 
+              height="100%" 
+              src={`https://www.youtube.com/embed/${LATEST_VIDEO_ID}`} 
+              title="My latest video"
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+              className="w-full h-full bg-zinc-900"
+            ></iframe>
+          </div>
+          <p className="mt-4 text-zinc-400 text-sm md:text-base leading-relaxed uppercase tracking-widest">
+            My latest video!
           </p>
         </div>
 
