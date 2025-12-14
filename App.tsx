@@ -1,7 +1,6 @@
 import React, { Suspense, Component, ReactNode } from 'react';
 import { Masthead3D } from './components/Masthead3D';
 import { YouTubeIcon, PatreonIcon, InstagramIcon, TikTokIcon } from './components/Icons';
-import { NewsletterForm } from './components/NewsletterForm';
 import { SocialLink } from './types';
 
 // Error Boundary to catch 3D crashes so the rest of the site stays up
@@ -108,9 +107,6 @@ const App: React.FC = () => {
             </a>
           ))}
         </div>
-
-        {/* 3. NEWSLETTER FORM */}
-        <NewsletterForm />
 
       </main>
     </div>
