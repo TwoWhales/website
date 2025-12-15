@@ -8,10 +8,7 @@ const LATEST_VIDEO_ID = "TQOizpRSY2g";
 
 // Error Boundary to catch 3D crashes so the rest of the site stays up
 class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  state = { hasError: false };
 
   static getDerivedStateFromError() {
     return { hasError: true };

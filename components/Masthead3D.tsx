@@ -4,19 +4,6 @@ import { Text, Environment } from '@react-three/drei';
 import { EffectComposer, ChromaticAberration, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-// Fix for missing types in JSX.IntrinsicElements for R3F components
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      group: any;
-      meshStandardMaterial: any;
-      ambientLight: any;
-      directionalLight: any;
-      spotLight: any;
-    }
-  }
-}
-
 // Special Elite font from CDN (Standard WOFF format supported by the 'Text' component)
 const FONT_URL = 'https://cdn.jsdelivr.net/npm/@fontsource/special-elite@5.0.8/files/special-elite-latin-400-normal.woff';
 
