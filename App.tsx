@@ -71,8 +71,8 @@ const App: React.FC = () => {
         
         {/* Intro Text */}
         <div className="mb-8 text-center max-w-lg">
-          <p className="text-zinc-400 text-sm md:text-base leading-relaxed uppercase tracking-widest">
-            Esoteric knowledge from my twisted mind.
+          <p className="text-zinc-400 text-sm md:text-base leading-relaxed tracking-widest">
+            Esoteric knowledge from my twisted mind
           </p>
         </div>
 
@@ -90,7 +90,7 @@ const App: React.FC = () => {
               className="w-full h-full bg-zinc-900"
             ></iframe>
           </div>
-          <p className="mt-4 text-zinc-400 text-sm md:text-base leading-relaxed uppercase tracking-widest">
+          <p className="mt-4 text-zinc-400 text-sm md:text-base leading-relaxed tracking-widest">
             My latest video!
           </p>
         </div>

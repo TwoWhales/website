@@ -1,11 +1,23 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment } from '@react-three/drei';
 import { EffectComposer, ChromaticAberration, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 // Fix for missing JSX types in some environments
+// We augment both the global JSX namespace and the React module's JSX namespace
+// to ensure these intrinsic elements are recognized regardless of the TS configuration.
 declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      group: any;
+      ambientLight: any;
+      directionalLight: any;
+    }
+  }
+}
+
+declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       group: any;
@@ -98,6 +110,36 @@ const RetroExtrudedText = ({ text, position, size, color }: { text: string; posi
 
 const FloatingText = () => {
   const groupRef = useRef<THREE.Group>(null);
+  const [gyro, setGyro] = useState({ x: 0, y: 0 });
+
+  // Hook for device orientation (Accelerometer/Gyro effect)
+  useEffect(() => {
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      // Gamma is left/right tilt (-90 to 90)
+      // Beta is front/back tilt (-180 to 180)
+      
+      // We clamp the values so the text doesn't flip completely over
+      const gamma = THREE.MathUtils.clamp(e.gamma || 0, -45, 45);
+      const beta = THREE.MathUtils.clamp((e.beta || 0) - 45, -45, 45); // Offset beta so "holding phone" is neutral
+
+      // Convert to a small rotation influence
+      setGyro({
+        x: beta * 0.02, // Pitch
+        y: gamma * 0.02 // Roll/Yaw
+      });
+    };
+
+    // Check if window is defined (for SSR safety, though this is SPA)
+    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    };
+  }, []);
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -105,8 +147,12 @@ const FloatingText = () => {
       const t = clock.getElapsedTime();
 
       // Mouse influence
-      const targetRotY = pointer.x * 0.3; 
-      const targetRotX = -pointer.y * 0.2; 
+      const mouseRotY = pointer.x * 0.3; 
+      const mouseRotX = -pointer.y * 0.2; 
+
+      // Combine Mouse + Gyro
+      const targetRotY = mouseRotY + gyro.y;
+      const targetRotX = mouseRotX + gyro.x;
 
       // Base wobble
       const wobbleY = Math.sin(t * 0.5) * 0.1;
