@@ -1,14 +1,25 @@
+
 import React, { Suspense, Component, ReactNode } from 'react';
 import { Masthead3D } from './components/Masthead3D';
 import { YouTubeIcon, PatreonIcon, InstagramIcon, TikTokIcon } from './components/Icons';
 import { SocialLink } from './types';
 
-// REPLACE THIS ID WITH YOUR ACTUAL LATEST VIDEO ID FROM YOUTUBE
-const LATEST_VIDEO_ID = "TQOizpRSY2g"; 
+// Updated with the new requested video ID
+const LATEST_VIDEO_ID = "O24z1zOOuks"; 
+
+// Props and State interfaces for ErrorBoundary
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
 
 // Error Boundary to catch 3D crashes so the rest of the site stays up
-class ErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
-  state = { hasError: false };
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError() {
     return { hasError: true };

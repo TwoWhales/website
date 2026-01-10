@@ -1,31 +1,9 @@
+
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, Environment } from '@react-three/drei';
 import { EffectComposer, ChromaticAberration, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
-
-// Fix for missing JSX types in some environments
-// We augment both the global JSX namespace and the React module's JSX namespace
-// to ensure these intrinsic elements are recognized regardless of the TS configuration.
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      group: any;
-      ambientLight: any;
-      directionalLight: any;
-    }
-  }
-}
-
-declare module 'react' {
-  namespace JSX {
-    interface IntrinsicElements {
-      group: any;
-      ambientLight: any;
-      directionalLight: any;
-    }
-  }
-}
 
 // Special Elite font from CDN (Standard WOFF format supported by the 'Text' component)
 const FONT_URL = 'https://cdn.jsdelivr.net/npm/@fontsource/special-elite@5.0.8/files/special-elite-latin-400-normal.woff';
@@ -189,9 +167,30 @@ const FloatingText = () => {
 };
 
 export const Masthead3D: React.FC = () => {
+  // Handler to request device orientation permission on iOS
+  const handlePermission = () => {
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' && 
+      typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+    ) {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            console.log("Device orientation permission granted");
+          }
+        })
+        .catch(console.error);
+    }
+  };
+
   return (
+    // Added onClick to trigger permission request for iOS users
     // Reduced height on mobile (250px) to reduce empty space "padding", full height on desktop
-    <div className="w-full h-[250px] md:h-[400px] relative overflow-hidden bg-transparent">
+    <div 
+      className="w-full h-[250px] md:h-[400px] relative overflow-hidden bg-transparent cursor-pointer"
+      onClick={handlePermission}
+      title="Tap to enable motion controls"
+    >
       {/* 
          Canvas is the entry point for the 3D Scene.
          dpr ensures crisp rendering on high-res screens.
