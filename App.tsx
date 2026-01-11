@@ -19,7 +19,13 @@ interface ErrorBoundaryState {
 
 // Error Boundary to catch 3D crashes so the rest of the site stays up
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Define state property explicitly
   state: ErrorBoundaryState = { hasError: false };
+
+  // Explicit constructor to ensure props are correctly initialized in types
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+  }
 
   static getDerivedStateFromError() {
     return { hasError: true };
