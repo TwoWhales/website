@@ -5,7 +5,7 @@ import { YouTubeIcon, PatreonIcon, InstagramIcon, TikTokIcon } from './component
 import { SocialLink } from './types';
 
 // Updated with the new requested video ID
-const LATEST_VIDEO_ID = "O24z1zOOuks"; 
+const LATEST_VIDEO_ID = "uPSbsXQIGNg"; 
 
 // Props and State interfaces for ErrorBoundary
 interface ErrorBoundaryProps {
