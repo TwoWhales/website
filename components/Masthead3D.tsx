@@ -31,7 +31,7 @@ const DynamicChromaticAberration = () => {
   return (
     <ChromaticAberration
       ref={ref}
-      offset={[0.005, 0.005]} // Increased base offset
+      offset={new THREE.Vector2(0.005, 0.005)} // Increased base offset
       radialModulation={false}
       modulationOffset={0}
     />
