@@ -1,220 +1,264 @@
 
-/// <reference types="@react-three/fiber" />
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Environment } from '@react-three/drei';
-import { EffectComposer, ChromaticAberration, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-// Special Elite font from CDN (Standard WOFF format supported by the 'Text' component)
+// Special Elite font from CDN (used to bake the logo onto a canvas texture)
 const FONT_URL = 'https://cdn.jsdelivr.net/npm/@fontsource/special-elite@5.0.8/files/special-elite-latin-400-normal.woff';
+const FONT_FAMILY = '"Special Elite", "Courier New", monospace';
 
-const DynamicChromaticAberration = () => {
-  const ref = useRef<any>(null);
+const LOGO_W = 1024;
+const LOGO_H = 512;
 
-  useFrame((state) => {
-    if (ref.current) {
-      const elapsedTime = state.clock.getElapsedTime();
+// Logo plane dimensions (2:1 aspect, matches the baked texture)
+const PLANE_W = 6;
+const PLANE_H = 3;
 
-      // Increased intensity for better visibility on mobile
-      const x = 0.005 + Math.sin(elapsedTime * 5) * 0.0004;
-      const y = 0.005 + Math.sin(elapsedTime * 5 + 3) * 0.0004;
+// Number of stacked "depth" layers for the 3D extrusion effect
+const DEPTH_LAYERS = [-0.06, -0.12, -0.18, -0.24];
 
-      // Create the vector
-      const CAwobble = new THREE.Vector2(x, y);
-      
-      // Apply the vector to the offset
-      ref.current.offset = CAwobble;
+// Ensure the Special Elite font is loaded so canvas text renders correctly.
+// Falls back silently to the page's monospace font if loading fails.
+async function ensureFontLoaded(): Promise<void> {
+  if (typeof document === 'undefined') return;
+  const fonts = document.fonts;
+  if (!fonts) return;
+  try {
+    if (!fonts.check(`100px "Special Elite"`)) {
+      const face = new FontFace('Special Elite', `url(${FONT_URL})`);
+      await face.load();
+      fonts.add(face);
     }
-  });
+  } catch {
+    // Ignore - fall back to Courier New
+  }
+}
 
-  return (
-    <ChromaticAberration
-      ref={ref}
-      offset={new THREE.Vector2(0.005, 0.005)} // Increased base offset
-      radialModulation={false}
-      modulationOffset={0}
-    />
+// Bake a retro "goblin neon" logo (GOBLIN over GRAFIX) into a single canvas.
+// This is done once and reused, so it costs almost nothing at render time.
+function bakeLogoTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = LOGO_W;
+  canvas.height = LOGO_H;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, LOGO_W, LOGO_H);
+
+  const size = 150;
+  const lineHeight = 190;
+  const words = [
+    { text: 'GOBLIN', y: LOGO_H / 2 - lineHeight / 2 },
+    { text: 'GRAFIX', y: LOGO_H / 2 + lineHeight / 2 },
+  ];
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${size}px ${FONT_FAMILY}`;
+
+  // Soft radial "goblin green" glow behind the whole logo
+  const glow = ctx.createRadialGradient(
+    LOGO_W / 2, LOGO_H / 2, 0,
+    LOGO_W / 2, LOGO_H / 2, LOGO_W * 0.5,
   );
-};
+  glow.addColorStop(0, 'rgba(90, 255, 160, 0.30)');
+  glow.addColorStop(0.45, 'rgba(30, 140, 90, 0.16)');
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, LOGO_W, LOGO_H);
 
-// Adjusts camera position based on screen width to ensure text fits and removes perceived padding
+  // Neon glow pass around the front text
+  ctx.shadowColor = 'rgba(80, 255, 150, 0.9)';
+  ctx.shadowBlur = 45;
+
+  // Front text with a subtle white->green gradient
+  const grad = ctx.createLinearGradient(0, words[0].y - size, 0, words[1].y + size);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.5, '#eafff2');
+  grad.addColorStop(1, '#a8ffce');
+  ctx.fillStyle = grad;
+
+  for (const w of words) {
+    ctx.fillText(w.text, LOGO_W / 2, w.y);
+  }
+
+  // Second pass intensifies the neon glow
+  ctx.shadowBlur = 85;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  for (const w of words) {
+    ctx.fillText(w.text, LOGO_W / 2, w.y);
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// Adjusts camera distance so the logo always fits on any screen width.
 const ResponsiveCamera = () => {
   const { camera, size } = useThree();
-  
+
   useFrame(() => {
     const aspect = size.width / size.height;
-    // If aspect is low (mobile portrait), pull camera back to fit width.
-    // Standard distance is 7. Mobile needs more like 10-11 to prevent cutting off sides.
-    const targetZ = aspect < 1 ? 11 : 7;
-    
-    // Smooth transition
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.1);
+    const targetZ = aspect < 1.2 ? 9 : 7;
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.08);
   });
-  
+
   return null;
 };
 
-// Helper component to create a "Fake 3D" extrusion by stacking text layers
-const RetroExtrudedText = ({ text, position, size, color }: { text: string; position: [number, number, number]; size: number; color: string }) => {
-  // Create an array of offsets for the "depth"
-  // 8 layers for a nice chunky look
-  const layers = useMemo(() => {
-    return Array.from({ length: 8 }).map((_, i) => ({
-      z: -i * 0.02, // Depth step
-      color: i === 0 ? color : '#333333', // Front face is the requested color, sides are dark
-    }));
-  }, [color]);
+// The interactive 3D logo: stacked textured planes + cursor/gyro tilt + float + pulse.
+const ExtrudedLogo = ({ tex, reducedMotion }: { tex: THREE.CanvasTexture; reducedMotion: boolean }) => {
+  const group = useRef<THREE.Group>(null);
+  const gyro = useRef({ x: 0, y: 0 });
+  const pulse = useRef(0);
 
-  return (
-    <group position={position}>
-      {layers.map((layer, index) => (
-        <Text
-          key={index}
-          font={FONT_URL}
-          fontSize={size}
-          color={layer.color}
-          position={[0, 0, layer.z]}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={index === 0 ? 0.01 : 0} // Slight outline on front face for crispness
-          outlineColor="#000000"
-        >
-          {text}
-        </Text>
-      ))}
-    </group>
-  );
-};
-
-const FloatingText = () => {
-  const groupRef = useRef<THREE.Group>(null);
-  const [gyro, setGyro] = useState({ x: 0, y: 0 });
-
-  // Hook for device orientation (Accelerometer/Gyro effect)
+  // Device orientation (gyroscope) for mobile tilt
   useEffect(() => {
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      // Gamma is left/right tilt (-90 to 90)
-      // Beta is front/back tilt (-180 to 180)
-      
-      // We clamp the values so the text doesn't flip completely over
+    if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) return;
+    const handler = (e: DeviceOrientationEvent) => {
       const gamma = THREE.MathUtils.clamp(e.gamma || 0, -45, 45);
-      const beta = THREE.MathUtils.clamp((e.beta || 0) - 45, -45, 45); // Offset beta so "holding phone" is neutral
-
-      // Convert to a small rotation influence
-      setGyro({
-        x: beta * 0.02, // Pitch
-        y: gamma * 0.02 // Roll/Yaw
-      });
+      const beta = THREE.MathUtils.clamp((e.beta || 0) - 45, -45, 45);
+      gyro.current = { x: beta * 0.02, y: gamma * 0.02 };
     };
-
-    // Check if window is defined (for SSR safety, though this is SPA)
-    if (typeof window !== 'undefined' && window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('deviceorientation', handleOrientation);
-      }
-    };
+    window.addEventListener('deviceorientation', handler);
+    return () => window.removeEventListener('deviceorientation', handler);
   }, []);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      const { clock, pointer } = state;
-      const t = clock.getElapsedTime();
+  useFrame((state, delta) => {
+    const g = group.current;
+    if (!g) return;
+    const t = state.clock.getElapsedTime();
 
-      // Mouse influence
-      const mouseRotY = pointer.x * 0.3; 
-      const mouseRotX = -pointer.y * 0.2; 
+    // Cursor + gyro drive the target rotation
+    const targetX = -state.pointer.y * 0.35 + gyro.current.x;
+    const targetY = state.pointer.x * 0.5 + gyro.current.y;
 
-      // Combine Mouse + Gyro
-      const targetRotY = mouseRotY + gyro.y;
-      const targetRotX = mouseRotX + gyro.x;
+    // Gentle idle wobble
+    const wobbleX = Math.cos(t * 0.4) * 0.05;
+    const wobbleY = Math.sin(t * 0.5) * 0.07;
 
-      // Base wobble
-      const wobbleY = Math.sin(t * 0.5) * 0.1;
-      const wobbleX = Math.cos(t * 0.3) * 0.05;
+    // Frame-rate independent smoothing factor
+    const k = reducedMotion ? 0 : 1 - Math.pow(0.001, delta);
 
-      // Smoothly interpolate
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY + wobbleY, 0.1);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX + wobbleX, 0.1);
-      
-      // Floating motion
-      groupRef.current.position.y = Math.sin(t * 0.8) * 0.15;
+    g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, targetX + wobbleX, k);
+    g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, targetY + wobbleY, k);
+
+    if (!reducedMotion) {
+      g.position.y = Math.sin(t * 0.8) * 0.12;
+      g.position.x = Math.cos(t * 0.6) * 0.04;
     }
+
+    // Click / tap pulse
+    pulse.current = THREE.MathUtils.lerp(pulse.current, 0, k * 4);
+    const s = 1 + pulse.current;
+    g.scale.set(s, s, s);
   });
 
+  const handlePointerDown = () => {
+    pulse.current = 0.14;
+  };
+
+  // Front face is bright; back layers are tinted dark for the extruded depth.
   return (
-    <group ref={groupRef}>
-      {/* Top Word: GOBLIN */}
-      <RetroExtrudedText 
-        text="GOBLIN" 
-        position={[0, 0.6, 0]} 
-        size={1.2} 
-        color="#ffffff" 
-      />
-      
-      {/* Bottom Word: GRAFIX */}
-      <RetroExtrudedText 
-        text="GRAFIX" 
-        position={[0, -0.6, 0]} 
-        size={1.2} 
-        color="#ffffff" 
-      />
+    <group ref={group} onPointerDown={handlePointerDown}>
+      {DEPTH_LAYERS.map((z, i) => (
+        <mesh key={i} position={[0, 0, z]}>
+          <planeGeometry args={[PLANE_W, PLANE_H]} />
+          <meshBasicMaterial
+            map={tex}
+            color="#0a1f14"
+            transparent
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[PLANE_W, PLANE_H]} />
+        <meshBasicMaterial
+          map={tex}
+          color="#ffffff"
+          transparent
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
     </group>
   );
 };
 
 export const Masthead3D: React.FC = () => {
-  // Handler to request device orientation permission on iOS
+  const [tex, setTex] = useState<THREE.CanvasTexture | null>(null);
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  );
+
+  // Bake the logo texture once after the font is ready
+  useEffect(() => {
+    let cancelled = false;
+    ensureFontLoaded()
+      .then(() => bakeLogoTexture())
+      .then((t) => {
+        if (!cancelled) setTex(t);
+      })
+      .catch(() => {
+        if (!cancelled) setTex(bakeLogoTexture());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Pause rendering when the masthead scrolls offscreen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => setInView(entries[0].isIntersecting),
+      { rootMargin: '100px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Request iOS gyroscope permission on tap
   const handlePermission = () => {
     if (
-      typeof DeviceOrientationEvent !== 'undefined' && 
+      typeof DeviceOrientationEvent !== 'undefined' &&
       typeof (DeviceOrientationEvent as any).requestPermission === 'function'
     ) {
       (DeviceOrientationEvent as any).requestPermission()
         .then((response: string) => {
-          if (response === 'granted') {
-            console.log("Device orientation permission granted");
-          }
+          if (response === 'granted') console.log('Device orientation permission granted');
         })
         .catch(console.error);
     }
   };
 
+  const frameloop = reducedMotion ? 'demand' : inView ? 'always' : 'never';
+
   return (
-    // Added onClick to trigger permission request for iOS users
-    // Reduced height on mobile (250px) to reduce empty space "padding", full height on desktop
-    <div 
+    <div
+      ref={containerRef}
       className="w-full h-[250px] md:h-[400px] relative overflow-hidden bg-transparent cursor-pointer"
       onClick={handlePermission}
-      title="Tap to enable motion controls"
+      title="Move to tilt - tap for a pulse"
     >
-      {/* 
-         Canvas is the entry point for the 3D Scene.
-         dpr ensures crisp rendering on high-res screens.
-      */}
-      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 7], fov: 45 }}>
+      <Canvas
+        dpr={[1, 2]}
+        frameloop={frameloop}
+        camera={{ position: [0, 0, 7], fov: 45 }}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
+      >
         <ResponsiveCamera />
-
-        {/* Lights - simplified since SDF text handles its own color mostly, but scene needs ambient */}
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        
-        {/* The 3D Content */}
-        <FloatingText />
-
-        {/* Post Processing Effects */}
-        <EffectComposer enableNormalPass={false}>
-            {/* Custom Chromatic Aberration with smooth wobble */}
-            <DynamicChromaticAberration />
-            <Bloom luminanceThreshold={0.5} intensity={0.3} levels={9} mipmapBlur />
-        </EffectComposer>
-        
-        {/* Environment reflection mapping - subtle effect on the scene */}
-        <Environment preset="city" />
+        {tex && <ExtrudedLogo tex={tex} reducedMotion={reducedMotion} />}
       </Canvas>
     </div>
   );
