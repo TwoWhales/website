@@ -11,8 +11,8 @@ const LOGO_W = 1024;
 const LOGO_H = 512;
 
 // Logo plane dimensions (2:1 aspect, matches the baked texture)
-const PLANE_W = 6;
-const PLANE_H = 3;
+const PLANE_W = 7;
+const PLANE_H = 3.5;
 
 // Number of stacked "depth" layers for the 3D extrusion effect
 const DEPTH_LAYERS = [-0.06, -0.12, -0.18, -0.24];
@@ -54,16 +54,18 @@ function bakeLogoTexture(): THREE.CanvasTexture {
   ctx.textBaseline = 'middle';
   ctx.font = `bold ${size}px ${FONT_FAMILY}`;
 
-  // Soft radial "goblin green" glow behind the whole logo
-  const glow = ctx.createRadialGradient(
-    LOGO_W / 2, LOGO_H / 2, 0,
-    LOGO_W / 2, LOGO_H / 2, LOGO_W * 0.5,
-  );
-  glow.addColorStop(0, 'rgba(90, 255, 160, 0.30)');
-  glow.addColorStop(0.45, 'rgba(30, 140, 90, 0.16)');
+  // Soft elliptical "goblin green" glow that fades out before the plane edges
+  // (elliptical so it isn't clipped at the top/bottom of the canvas)
+  ctx.save();
+  ctx.translate(LOGO_W / 2, LOGO_H / 2);
+  ctx.scale(1, LOGO_H / LOGO_W);
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, LOGO_W * 0.45);
+  glow.addColorStop(0, 'rgba(90, 255, 160, 0.32)');
+  glow.addColorStop(0.55, 'rgba(30, 140, 90, 0.16)');
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, LOGO_W, LOGO_H);
+  ctx.fillRect(-LOGO_W / 2, -LOGO_H / 2, LOGO_W, LOGO_H);
+  ctx.restore();
 
   // Neon glow pass around the front text
   ctx.shadowColor = 'rgba(80, 255, 150, 0.9)';
@@ -94,13 +96,15 @@ function bakeLogoTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-// Adjusts camera distance so the logo always fits on any screen width.
+// Adjusts camera distance so the logo always fits (with margin) on any screen.
 const ResponsiveCamera = () => {
   const { camera, size } = useThree();
 
   useFrame(() => {
     const aspect = size.width / size.height;
-    const targetZ = aspect < 1.2 ? 9 : 7;
+    // Distance needed so the logo width (plus ~15% margin) fits in the viewport width
+    const fitZ = (PLANE_W * 1.15) / (2 * Math.tan((45 * Math.PI) / 360) * aspect);
+    const targetZ = Math.max(7, fitZ);
     camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.08);
   });
 
@@ -247,7 +251,7 @@ export const Masthead3D: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[250px] md:h-[400px] relative overflow-hidden bg-transparent cursor-pointer"
+      className="w-full h-[60vh] md:h-screen relative overflow-hidden bg-transparent cursor-pointer"
       onClick={handlePermission}
       title="Move to tilt - tap for a pulse"
     >
