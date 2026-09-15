@@ -251,7 +251,7 @@ export const Masthead3D: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[60vh] md:h-screen relative overflow-hidden bg-transparent cursor-pointer"
+      className="w-full h-[300px] md:h-[450px] relative overflow-hidden bg-transparent cursor-pointer"
       onClick={handlePermission}
       title="Move to tilt - tap for a pulse"
     >
