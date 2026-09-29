@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#14120e" />
+  <title>GeoLearner</title>
+  <script type="module" crossorigin src="./assets/index-uC2ExHLY.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D9dyWMTt.css">
+</head>
+<body data-mode="explore">
+  <div id="stage"></div>
+  <header class="hud top">
+    <div class="brand">GEOLEARNER</div>
+    <nav id="modes" aria-label="Mode">
+      <button data-mode="explore" class="on">Explore</button>
+      <button data-mode="learn">Learn</button>
+      <button data-mode="daily">Daily</button>
+      <button data-mode="atlas">Atlas</button>
+    </nav>
+    <nav id="chips"></nav>
+    <div class="winds-box">
+      <div class="toggles">
+        <button id="rivers" class="toggle on" aria-pressed="true">Rivers</button>
+        <button id="winds" class="toggle on" aria-pressed="true">Winds</button>
+      </div>
+      <div id="winds-source"></div>
+    </div>
+  </header>
+  <div class="hud bottom">
+    <div id="hover"></div>
+    <section id="panel" hidden aria-live="polite"></section>
+    <div class="hint">drag to spin · click a country · zoom out for space</div>
+  </div>
+  <div id="wind-labels"></div>
+  <div id="river-labels"></div>
+  <div id="known-labels"></div>
+  <div id="peaks"></div>
+  <div id="arc-label" hidden></div>
+  <aside id="card" hidden>
+    <button id="close" aria-label="Close">×</button>
+    <div class="name"></div>
+    <div class="meta"></div>
+    <div class="about"></div>
+    <div class="capital"></div>
+    <div class="pop"></div>
+    <div class="peak"></div>
+    <div class="from"></div>
+    <div class="fact" hidden><span class="fact-text"></span><span class="cite">CIA World Factbook</span></div>
+  </aside>
+</body>
+</html>
