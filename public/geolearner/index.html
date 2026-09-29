@@ -6,8 +6,13 @@
   <meta name="theme-color" content="#14120e" />
   <title>GeoLearner</title>
   <style>html{background:#14120e}#loader{z-index:10;color:#eae5da;letter-spacing:.3em;background:#14120e;flex-direction:column;justify-content:center;align-items:center;gap:18px;font:11px/1 ui-monospace,Geist Mono,monospace;transition:opacity .6s;display:flex;position:fixed;inset:0}#loader.gone{opacity:0;pointer-events:none}#loader div{opacity:.7;animation:1.8s ease-in-out infinite alternate loader-breathe}@keyframes loader-breathe{0%{opacity:.35}to{opacity:.8}}</style>
-  <script type="module" crossorigin src="./assets/index-htkEoeYW.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D9dyWMTt.css">
+  <!-- start the data downloads alongside the script instead of after it -->
+  <link rel="preload" href="./data/world.json" as="fetch" crossorigin />
+  <link rel="preload" href="./data/wind.json" as="fetch" crossorigin />
+  <link rel="preload" href="./data/rivers.json" as="fetch" crossorigin />
+  <link rel="preload" href="./data/sky.json" as="fetch" crossorigin />
+  <script type="module" crossorigin src="./assets/index-AnvSs5gt.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BH0VqJ4I.css">
 </head>
 <body data-mode="explore">
   <div id="loader" aria-label="Loading">
