@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#14120e" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#f4ecda" media="(prefers-color-scheme: light)" />
   <title>GeoLearner</title>
-  <style>html{background:#14120e}#loader{z-index:10;color:#eae5da;letter-spacing:.3em;background:#14120e;flex-direction:column;justify-content:center;align-items:center;gap:18px;font:11px/1 ui-monospace,Geist Mono,monospace;transition:opacity .6s;display:flex;position:fixed;inset:0}html.paper,html.paper #loader{background:#f4ecda}html.paper #loader{color:#1f1c16}#loader.gone{opacity:0;pointer-events:none}#loader div{opacity:.7;animation:1.8s ease-in-out infinite alternate loader-breathe}@keyframes loader-breathe{0%{opacity:.35}to{opacity:.8}}</style>
+  <style>html{background:#14120e}html.paper{background:#f4ecda}:root{--vh:1vh}@supports (height:1dvh){:root{--vh:1dvh}}#shell-globe{z-index:1;pointer-events:none;color:#eae5da;--r:min(calc(var(--vh) * 29.63), 40.57vw);left:calc(50vw - var(--r));top:calc(var(--vh) * 43.5 - var(--r));width:calc(var(--r) * 2);height:calc(var(--r) * 2);transition:opacity .9s;position:fixed}@media (width<=599px){#shell-globe{top:calc(var(--vh) * 40 - var(--r))}}html.paper #shell-globe{color:#1f1c16}#shell-globe g{animation:1.8s ease-in-out infinite alternate shell-breathe}@keyframes shell-breathe{0%{opacity:.3}to{opacity:.6}}#stage canvas{opacity:0;transition:opacity .9s}body.lit #stage canvas{opacity:1}body.lit #shell-globe{opacity:0}#panel .tile.early{border-color:currentColor}</style>
   <script>
     // pick paper or dark before anything paints: the saved switch, or the device on Auto
     try { var t = localStorage.getItem('geolearner.theme'); } catch (e) {}
@@ -18,17 +18,15 @@
   <link rel="preload" href="./data/wind.json" as="fetch" crossorigin />
   <link rel="preload" href="./data/rivers.json" as="fetch" crossorigin />
   <link rel="preload" href="./data/sky.json" as="fetch" crossorigin />
-  <script type="module" crossorigin src="./assets/index-DPVww2e0.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-IpbBOQci.css">
+  <script type="module" crossorigin src="./assets/index-Bg4qE1z6.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DJepxllD.css">
 </head>
 <body data-mode="explore">
-  <div id="loader" aria-label="Loading">
-    <svg viewBox="0 0 100 100" width="96" height="96" fill="none" stroke="currentColor" stroke-width="0.9">
-      <circle cx="50" cy="50" r="34"/><ellipse cx="50" cy="50" rx="34" ry="5" opacity="0.55"/><ellipse cx="50" cy="33" rx="29.4" ry="4.3" opacity="0.55"/><ellipse cx="50" cy="67" rx="29.4" ry="4.3" opacity="0.55"/><ellipse cx="50" cy="50" rx="34" ry="34"><animate attributeName="rx" dur="3.6s" begin="-0.0s" repeatCount="indefinite" values="0;34;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="50" cy="50" rx="34" ry="34"><animate attributeName="rx" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="0;34;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="50" cy="50" rx="34" ry="34"><animate attributeName="rx" dur="3.6s" begin="-2.4s" repeatCount="indefinite" values="0;34;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse>
-      <ellipse cx="50" cy="50" rx="43" ry="6" opacity="0.4" transform="rotate(-23.44 50 50)" stroke-dasharray="1 2"/>
-    </svg>
-    <div>GEOLEARNER</div>
-  </div>
+  <svg id="shell-globe" viewBox="-1.02 -1.02 2.04 2.04" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
+    <g><circle r="1" vector-effect="non-scaling-stroke"/>
+      <g transform="rotate(-10)" opacity="0.7"><ellipse ry="0.34" rx="1" vector-effect="non-scaling-stroke"/><ellipse cy="-0.5" rx="0.866" ry="0.29" vector-effect="non-scaling-stroke"/><ellipse cy="0.5" rx="0.866" ry="0.29" vector-effect="non-scaling-stroke"/>
+      <ellipse ry="1" rx="1" vector-effect="non-scaling-stroke"><animate attributeName="rx" dur="7.2s" begin="0s" repeatCount="indefinite" values="0;1;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse ry="1" rx="1" vector-effect="non-scaling-stroke"><animate attributeName="rx" dur="7.2s" begin="-2.4s" repeatCount="indefinite" values="0;1;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse ry="1" rx="1" vector-effect="non-scaling-stroke"><animate attributeName="rx" dur="7.2s" begin="-4.8s" repeatCount="indefinite" values="0;1;0" keyTimes="0;0.5;1" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse></g></g>
+  </svg>
   <div id="stage"></div>
   <header class="hud top">
     <div class="brand">GEOLEARNER</div>
@@ -38,7 +36,9 @@
       <button data-mode="daily">Daily</button>
       <button data-mode="atlas">Atlas</button>
     </nav>
-    <nav id="chips"></nav>
+    <nav id="chips"><!-- placeholders so the header is laid out before the map arrives; main.ts rebuilds them -->
+      <button class="on">World</button><button>Africa <span>54</span></button><button>Asia <span>48</span></button><button>Europe <span>46</span></button><button>North America <span>23</span></button><button>South America <span>12</span></button><button>Oceania <span>14</span></button><button>Territories <span>42</span></button>
+    </nav>
     <div class="winds-box">
       <div class="toggles">
         <button id="rivers" class="toggle on" aria-pressed="true">Rivers</button>
@@ -49,7 +49,7 @@
   </header>
   <div class="hud bottom">
     <div id="hover"></div>
-    <section id="panel" hidden aria-live="polite"></section>
+    <section id="panel" class="panel explore welcome" aria-live="polite"></section>
     <div class="foot">
       <div class="hint">drag to spin · click a country · zoom out for space</div>
       <div id="theme" role="radiogroup" aria-label="Appearance">
@@ -59,6 +59,49 @@
       </div>
     </div>
   </div>
+  <script>
+    // Draws the launch picker straight away, before the bundle and the world data arrive, so the
+    // first thing on screen is the real screen. game.ts redraws the same panel once it is up.
+    // Everything here is worked out from the date and the save; the Learn and Atlas lines come
+    // from the last visit (game.ts keeps them under geolearner.shell), since they need the map.
+    (function () {
+      var panel = document.getElementById('panel');
+      var now = new Date(), pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      var key = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+      var save = null, last = null;
+      try { save = JSON.parse(localStorage.getItem('geolearner:v1')); last = JSON.parse(localStorage.getItem('geolearner.shell')); } catch (e) {}
+      var utc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      var number = Math.round((utc - Date.UTC(2026, 8, 29)) / 86400000) + 1;
+      var theme = ['Microstates', 'Africa', 'Asia', 'Europe', 'The Americas', 'Oceania', 'Mixed'][new Date(utc).getUTCDay()];
+      var played = save && save.daily && save.daily[key];
+      var seen = save && save.cards && Object.keys(save.cards).length;
+      var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+      panel.append(el('div', 'eyebrow', now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })), el('div', 'title', 'Learn where every country is'), el('div', 'note', 'Spaced repetition brings each country back just before you would forget it, so a few minutes a day sticks.'));
+      var tiles = el('div', 'modes');
+      var tile = function (mode, name, note, primary) {
+        var b = el('button', primary ? 'tile primary' : 'tile');
+        b.dataset.early = mode;
+        b.append(el('b', '', name), el('span', '', note));
+        tiles.append(b);
+      };
+      tile('daily', 'Daily #' + number, played ? 'Done \u00b7 ' + played.score + ' pts' : theme + ' \u00b7 10 countries', !played);
+      tile('learn', 'Learn', seen ? (last && last.learn) || '\u00a0' : 'Start with 5 countries', !!played);
+      tile('atlas', 'Atlas', (last && last.atlas) || (seen ? '\u00a0' : '0 of 197 known'));
+      tile('explore', 'Explore', 'Spin, click, read the facts');
+      panel.append(tiles);
+      // a press before the game is up is kept and played once it is
+      var press = function (e) {
+        if (document.body.classList.contains('ready')) return;
+        var b = e.target.closest('[data-early], #modes button');
+        if (!b) return;
+        window.__earlyMode = b.dataset.early || b.dataset.mode;
+        for (var t of document.querySelectorAll('.early')) t.classList.remove('early');
+        b.classList.add('early');
+      };
+      panel.addEventListener('click', press);
+      document.getElementById('modes').addEventListener('click', press);
+    })();
+  </script>
   <div id="wind-labels"></div>
   <div id="river-labels"></div>
   <div id="known-labels"></div>
